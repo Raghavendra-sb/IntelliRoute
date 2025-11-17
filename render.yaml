@@ -1,0 +1,17 @@
+services:
+  - type: web
+    name: intelliroute-api
+    env: python
+    rootDir: IntelliRoute
+    buildCommand: pip install fastapi uvicorn python-dotenv openai langgraph pydantic typing_extensions
+    startCommand: uvicorn server:app --host 0.0.0.0 --port $PORT
+    autoDeploy: true
+  - type: static_site
+    name: intelliroute-frontend
+    rootDir: .
+    buildCommand: npm ci && npm run build
+    publishPath: dist
+    envVars:
+      - key: VITE_API_BASE_URL
+        value: https://intelliroute-api.onrender.com
+    autoDeploy: true

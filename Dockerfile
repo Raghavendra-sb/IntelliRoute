@@ -1,9 +1,13 @@
-FROM python:3.11-slim
+FROM node:20-alpine AS build
 WORKDIR /app
-ENV PYTHONDONTWRITEBYTECODE=1
-ENV PYTHONUNBUFFERED=1
-COPY IntelliRoute /app
-RUN pip install --no-cache-dir fastapi uvicorn python-dotenv openai langgraph pydantic typing_extensions
-ENV PORT=8000
-EXPOSE 8000
-CMD ["python", "server.py"]
+COPY package.json package-lock.json ./
+RUN npm ci
+COPY . .
+ENV VITE_API_BASE_URL=http://localhost:8000
+RUN npm run build
+
+FROM nginx:alpine AS runner
+COPY nginx.conf /etc/nginx/conf.d/default.conf
+COPY --from=build /app/dist /usr/share/nginx/html
+EXPOSE 80
+CMD ["nginx", "-g", "daemon off;"]
